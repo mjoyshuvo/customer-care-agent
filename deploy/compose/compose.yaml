@@ -1,0 +1,23 @@
+# Local stack. Phase 0: Postgres only. Later phases add app, gateway, worker, docker-agent,
+# open-webui, langfuse, grafana and prometheus.
+name: ccare
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: ccare
+      POSTGRES_PASSWORD: ccare   # local dev only
+      POSTGRES_DB: ccare
+    ports:
+      - "5433:5432"   # 5432 is often taken by a local Postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ccare -d ccare"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  pgdata:
