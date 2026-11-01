@@ -1,0 +1,31 @@
+# Step 2 of Track B: the smallest working agent, on OpenRouter.
+# Docs: https://docs.docker.com/ai/docker-agent/providers/custom/
+#       https://docs.docker.com/ai/docker-agent/reference/config/
+
+providers:
+  openrouter:
+    api_type: openai_chatcompletions      # OpenRouter speaks the OpenAI chat-completions API
+    base_url: https://openrouter.ai/api/v1
+    token_key: OPENROUTER_API_KEY         # the NAME of the env var, never the key itself
+
+models:
+  free:
+    provider: openrouter
+    model: nvidia/nemotron-3.5-super-vl:free  # free + tool calls work in docker-agent v1.27.1 (see PROGRESS.md)
+
+agents:
+  root:
+    model: free
+    description: Smoke-test agent
+    instruction: |
+      You are a test agent. Answer in one sentence.
+      When the user asks who they are, call the whoami tool and report the result.
+    toolsets:
+      - type: mcp
+        remote:
+          url: http://127.0.0.1:8100/mcp
+          transport_type: streamable
+          headers:
+            # The token comes from the shell, never from the model. Resolved on every request.
+            # Docs: https://docs.docker.com/ai/docker-agent/features/remote-mcp/
+            Authorization: "Bearer ${env.CCARE_TOKEN}"

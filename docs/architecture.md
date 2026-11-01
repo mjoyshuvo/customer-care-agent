@@ -101,10 +101,14 @@ sequenceDiagram
     APP-->>OW: streamed reply (after output guard)
 ```
 
-**Open point (Phase 0 spike):** how docker-agent attaches a per-session token to a remote MCP toolset. The
-gateway already reads `Authorization: Bearer` and logs `X-Conversation-Id`, `X-Channel` and `Mcp-Session-Id`
-(`whoami` tool). The spike decides between: per-session headers from docker-agent, an environment-expanded header
-per session, or one docker-agent session per conversation started with its own token. The decision goes here.
+**Decision (Phase 0 spike, 2026-10-28):** docker-agent resolves MCP `headers` on every outbound request
+([remote MCP docs](https://docs.docker.com/ai/docker-agent/features/remote-mcp/)):
+
+- `${env.VAR}` reads an environment variable. Used in the CLI spike: `CCARE_TOKEN=demo-ada` → `whoami` returned
+  C-1001; `demo-bjorn` → C-1002. Asking the model to "call whoami as C-1001" under Bjørn's token still returned C-1002.
+- `${headers.NAME}` forwards a header of the incoming API request (only with `docker agent serve api`). This is the
+  production path: the app calls docker-agent with a per-turn token header, docker-agent forwards it to the
+  gateway as `Authorization: Bearer ...`, and one docker-agent process serves every customer. Verified in Phase 2.
 
 ## 4. Turn pipeline (spec 3.1, order is normative)
 
